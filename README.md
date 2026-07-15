@@ -2,11 +2,8 @@
 
 ## Install
 
-This repository does not use Homebrew's `homebrew-` repository prefix, so add the tap with its explicit remote:
-
 ```bash
-brew tap bludesign/ai-development-environment-tap \
-  https://github.com/bludesign/ai-development-environment-tap.git
+brew tap bludesign/ai-development-environment
 brew install ai-development-environment
 ```
 
