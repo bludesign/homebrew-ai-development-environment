@@ -1,8 +1,8 @@
 class ControlAgent < Formula
   desc "Outbound macOS control agent for AI Development Environment"
   homepage "https://github.com/bludesign/ai-development-environment"
-  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.23.tar.gz"
-  sha256 "55dec681af47429cd65f9ef6dc47d2229175127a13862ae22502b526e1e46acb"
+  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.24.tar.gz"
+  sha256 "ef4330c8ea02934e47461dc8d05ea14ac51a945c819a9b5f6b487e7ad437b8df"
   head "https://github.com/bludesign/ai-development-environment.git", branch: "main"
 
   depends_on "cloudflared"
