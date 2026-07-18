@@ -77,19 +77,9 @@ class AiDevelopmentEnvironment < Formula
       export AGENT_WS_PORT="${runtime_agent_ws_port:-$configured_agent_ws_port}"
       export DATABASE_URL="${runtime_database_url:-$configured_database_url}"
 
-      # Prisma's SQLite migration engine expects the database file to exist before the first
-      # `migrate deploy`. Create it without truncating an existing database.
-      if [[ "$DATABASE_URL" == file:* ]]; then
-        database_path="${DATABASE_URL#file:}"
-        mkdir -p "$(dirname "$database_path")"
-        if [[ ! -e "$database_path" ]]; then
-          touch "$database_path"
-        fi
-      fi
-
-      # Apply any pending database migrations before starting the server. This is a safe no-op
-      # until the schema gains its first migration. Fail fast rather than serve against a
-      # database whose migrations could not be applied.
+      # Apply any pending database migrations before starting the server; `migrate deploy`
+      # creates a missing SQLite database (including parent directories) itself. Fail fast
+      # rather than serve against a database whose migrations could not be applied.
       if ! (
         cd "#{opt_libexec}/prisma-runtime"
         "#{node}" node_modules/prisma/build/index.js migrate deploy
