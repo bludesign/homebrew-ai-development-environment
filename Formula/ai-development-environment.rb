@@ -4,6 +4,7 @@ class AiDevelopmentEnvironment < Formula
   url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.54.tar.gz"
   sha256 "9f1b6c7c4d84356c49ed9715fdf10a62c704b66597b5183cc8699b53d2529a0c"
 
+  depends_on :macos
   depends_on "node@24"
 
   def install
@@ -43,8 +44,10 @@ class AiDevelopmentEnvironment < Formula
       AGENT_WS_HOSTNAME=127.0.0.1
       AGENT_WS_PORT=3091
       DATABASE_URL=file:#{var}/ai-development-environment/production.db
+      CREDENTIAL_STORAGE_TYPE=keychain
     ENV
     etc.install config
+    chmod 0600, etc/"ai-development-environment.env"
 
     (bin/"ai-development-environment").write <<~BASH
       #!/bin/bash
@@ -55,20 +58,43 @@ class AiDevelopmentEnvironment < Formula
       runtime_agent_ws_hostname="$(printenv AGENT_WS_HOSTNAME || true)"
       runtime_agent_ws_port="$(printenv AGENT_WS_PORT || true)"
       runtime_database_url="$(printenv DATABASE_URL || true)"
+      credential_variables=(
+        CREDENTIAL_STORAGE_TYPE
+        CREDENTIAL_ENCRYPTION_KEY
+        VAULT_ADDR
+        VAULT_TOKEN
+        VAULT_NAMESPACE
+        CREDENTIAL_VAULT_MOUNT
+        CREDENTIAL_VAULT_PATH_PREFIX
+        CREDENTIAL_VAULT_HEADERS
+        VAULT_CACERT
+        VAULT_TLS_SERVER_NAME
+        VAULT_SKIP_VERIFY
+      )
+      runtime_credential_values=()
+      for name in "${credential_variables[@]}"; do
+        runtime_credential_values+=("$(printenv "$name" || true)")
+      done
       configured_hostname="127.0.0.1"
       configured_port="3090"
       configured_agent_ws_hostname="127.0.0.1"
       configured_agent_ws_port="3091"
       configured_database_url="file:#{var}/ai-development-environment/production.db"
+      configured_credential_values=("keychain" "" "" "" "" "" "" "" "" "" "")
 
       if [[ -r "#{etc}/ai-development-environment.env" ]]; then
-        unset HOSTNAME PORT AGENT_WS_HOSTNAME AGENT_WS_PORT DATABASE_URL
+        unset HOSTNAME PORT AGENT_WS_HOSTNAME AGENT_WS_PORT DATABASE_URL "${credential_variables[@]}"
         source "#{etc}/ai-development-environment.env"
         configured_hostname="${HOSTNAME:-$configured_hostname}"
         configured_port="${PORT:-$configured_port}"
         configured_agent_ws_hostname="${AGENT_WS_HOSTNAME:-$configured_agent_ws_hostname}"
         configured_agent_ws_port="${AGENT_WS_PORT:-$configured_agent_ws_port}"
         configured_database_url="${DATABASE_URL:-$configured_database_url}"
+        configured_credential_values=()
+        for name in "${credential_variables[@]}"; do
+          configured_credential_values+=("${!name-}")
+        done
+        configured_credential_values[0]="${configured_credential_values[0]:-keychain}"
       fi
 
       export HOSTNAME="${runtime_hostname:-$configured_hostname}"
@@ -76,6 +102,18 @@ class AiDevelopmentEnvironment < Formula
       export AGENT_WS_HOSTNAME="${runtime_agent_ws_hostname:-$configured_agent_ws_hostname}"
       export AGENT_WS_PORT="${runtime_agent_ws_port:-$configured_agent_ws_port}"
       export DATABASE_URL="${runtime_database_url:-$configured_database_url}"
+      index=0
+      for name in "${credential_variables[@]}"; do
+        runtime_value="${runtime_credential_values[$index]}"
+        configured_value="${configured_credential_values[$index]:-}"
+        value="${runtime_value:-$configured_value}"
+        if [[ -n "$value" ]]; then
+          export "$name=$value"
+        else
+          unset "$name"
+        fi
+        index=$((index + 1))
+      done
 
       # Apply any pending database migrations before starting the server; `migrate deploy`
       # creates a missing SQLite database (including parent directories) itself. Fail fast
@@ -106,7 +144,11 @@ class AiDevelopmentEnvironment < Formula
       database at #{var}/ai-development-environment/production.db.
 
       Edit #{etc}/ai-development-environment.env and restart the service to change the
-      bind addresses, ports, or the SQLite DATABASE_URL.
+      bind addresses, ports, SQLite DATABASE_URL, or credential backend. The environment
+      file is owner-readable only and defaults CREDENTIAL_STORAGE_TYPE to keychain.
+
+      Run `brew services` without sudo. A root daemon uses a different or unavailable
+      login Keychain and cannot access credentials saved by your user account.
     EOS
   end
 
@@ -124,10 +166,12 @@ class AiDevelopmentEnvironment < Formula
     output = testpath/"server.log"
     pid = spawn(
       {
-        "HOSTNAME"      => "127.0.0.1",
-        "PORT"          => port.to_s,
-        "AGENT_WS_PORT" => agent_ws_port.to_s,
-        "DATABASE_URL"  => "file:#{testpath}/test.db",
+        "HOSTNAME"                  => "127.0.0.1",
+        "PORT"                      => port.to_s,
+        "AGENT_WS_PORT"             => agent_ws_port.to_s,
+        "DATABASE_URL"              => "file:#{testpath}/test.db",
+        "CREDENTIAL_STORAGE_TYPE"   => "database",
+        "CREDENTIAL_ENCRYPTION_KEY" => "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
       },
       bin/"ai-development-environment",
       [:out, :err] => output.to_s,

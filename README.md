@@ -7,6 +7,8 @@ brew tap bludesign/ai-development-environment
 brew install ai-development-environment
 ```
 
+The application formula is macOS-only and defaults long-lived credential storage to the macOS Keychain.
+
 ## Service
 
 Start the application as a keep-alive service:
@@ -15,13 +17,15 @@ Start the application as a keep-alive service:
 brew services start ai-development-environment
 ```
 
+Run `brew services` as your normal user, without `sudo`. A root daemon uses a different or unavailable login Keychain.
+
 By default it listens at `http://127.0.0.1:3090`. Persistent settings are stored in:
 
 ```text
 $(brew --prefix)/etc/ai-development-environment.env
 ```
 
-Edit `HOSTNAME` or `PORT`, then apply the changes:
+The file is installed with owner-only permissions. Edit `HOSTNAME`, `PORT`, `CREDENTIAL_STORAGE_TYPE`, or any Vault variable, then apply the changes:
 
 ```bash
 brew services restart ai-development-environment
