@@ -38,7 +38,7 @@ class ControlAgent < Formula
   end
 
   service do
-    run opt_bin/"control-agent", "run"
+    run [opt_bin/"control-agent", "run"]
     keep_alive true
     process_type :background
     log_path var/"log/control-agent.log"
