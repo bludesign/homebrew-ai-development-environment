@@ -40,7 +40,8 @@ class ControlAgent < Formula
   service do
     run [opt_bin/"control-agent", "run"]
     keep_alive true
-    process_type :background
+    process_type :interactive
+    working_dir Dir.home
     log_path var/"log/control-agent.log"
     error_log_path var/"log/control-agent.err.log"
   end
