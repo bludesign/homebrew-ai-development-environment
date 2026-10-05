@@ -1,8 +1,8 @@
 class ControlAgent < Formula
   desc "Outbound macOS control agent for AI Development Environment"
   homepage "https://github.com/bludesign/ai-development-environment"
-  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.116.tar.gz"
-  sha256 "c46612ad1863acc0145b56e626ff134a548fdf1b54b60c158a17118caccf7f02"
+  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.117.tar.gz"
+  sha256 "c0b80b5c4dd59687ef3bc3344dec0c22ab96efdf3bbceec3e0911e225cfab6cb"
   head "https://github.com/bludesign/ai-development-environment.git", branch: "main"
 
   depends_on "cloudflared"
@@ -10,6 +10,7 @@ class ControlAgent < Formula
 
   def install
     system "npm", "ci"
+    system "npm", "version", version.to_s, "--no-git-tag-version", "--allow-same-version", "--prefix", "packages/control-agent" unless build.head?
     system "npm", "run", "agent:build"
 
     libexec.install "packages/control-agent/dist/control-agent.js"
