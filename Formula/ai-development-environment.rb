@@ -155,6 +155,7 @@ class AiDevelopmentEnvironment < Formula
   service do
     run opt_bin/"ai-development-environment"
     keep_alive true
+    process_type :interactive
     working_dir opt_libexec/"standalone"
     log_path var/"log/ai-development-environment.log"
     error_log_path var/"log/ai-development-environment.err.log"
