@@ -1,8 +1,8 @@
 class AiDevelopmentEnvironment < Formula
   desc "AI-focused development environment"
   homepage "https://github.com/bludesign/ai-development-environment"
-  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.147.tar.gz"
-  sha256 "aea1e5b135ad2d86f431cf9324b26fd0494fc3263b0136f70f24fa41cf9d20a4"
+  url "https://github.com/bludesign/ai-development-environment/archive/refs/tags/v0.0.148.tar.gz"
+  sha256 "2800f10e1e575e3f48836ae859a60871d6a6380d663fb08a8f4431843ca4db1a"
 
   depends_on :macos
   depends_on "node@24"
